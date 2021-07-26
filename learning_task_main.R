@@ -14,9 +14,13 @@ library(loo)
 library(ggplot2)
 
 #### read raw -----------------------------------------------------------------
-rawdata   = # complete this line for reading raw data
+#rawdata   = # complete this line for reading raw data
+rawdata = read.table(file = url or filepath, header = TRUE, sep = ',')
     
 # write a line here to remove missing trials
+sum(complete.cases(data))
+rawdata = rawdata[complete.cases(rawdatadata),]
+dim(rawdata[complete.cases(rawdata),])
 
 #### Preprocess the data ------------------------------------------------------
 subjList  = unique(rawdata[,"subjID"])
@@ -53,7 +57,7 @@ dataList = list(
 #### Running Stan #### 
 # =============================================================================
 rstan_options(auto_write = TRUE)
-options(mc.cores = 2) # <-- adjust if you want to run 4 cores in parallel
+options(mc.cores = 4) # <-- adjust if you want to run 4 cores in parallel
 
 nIter     = 2000
 nChains   = 4 
@@ -67,7 +71,15 @@ cat("Estimating", modelFile1, "model... \n")
 startTime = Sys.time(); print(startTime)
 cat("Calling", nChains, "simulations in Stan... \n")
 
-fit_rw = stan() # complete this line for calling Stan
+fit_rw = stan(modelFile1, 
+                   data    = dataList, 
+                   chains  = nChains,
+                   iter    = nIter,
+                   warmup  = nWarmup,
+                   thin    = nThin,
+                   init    = "random",
+                   seed    = 1450154637
+                   ) # complete this line for calling Stan
 
 cat("Finishing", modelFile1, "model simulation ... \n")
 endTime = Sys.time(); print(endTime)  
@@ -80,7 +92,15 @@ cat("Estimating", modelFile1, "model... \n")
 startTime = Sys.time(); print(startTime)
 cat("Calling", nChains, "simulations in Stan... \n")
 
-fit_rp = stan() # complete this line for calling Stan
+fit_rp = stan(modelFile2, 
+                   data    = dataList, 
+                   chains  = nChains,
+                   iter    = nIter,
+                   warmup  = nWarmup,
+                   thin    = nThin,
+                   init    = "random",
+                   seed    = 1450154637
+                   ) # complete this line for calling Stan
 
 cat("Finishing", modelFile2, "model simulation ... \n")
 endTime = Sys.time(); print(endTime)  
@@ -89,8 +109,8 @@ cat("It took",as.character.Date(endTime - startTime), "\n")
 # =============================================================================
 #### Model selection #### 
 # =============================================================================
-LL_rw = # complete this line for extreact log-likelihood
-LL_rp  = # complete this line for extreact log-likelihood
+LL_rw = extract_log_lik(fit_rw) # complete this line for extreact log-likelihood
+LL_rp  = extract_log_lik(fit_rp) # complete this line for extreact log-likelihood
 
 waic_rw = waic(LL_rw)
 waic_rp = waic(LL_rp)
