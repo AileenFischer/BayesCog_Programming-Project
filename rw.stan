@@ -12,7 +12,7 @@ transformed data {
 
 parameters {
   // group-level parameters
-  real lr_mu_rae; 
+  real lr_mu_raw; 
   real tau_mu_raw;
   real lr_sd_raw;
   real tau_sd_raw;
