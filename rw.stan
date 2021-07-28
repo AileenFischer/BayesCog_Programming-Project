@@ -1,7 +1,7 @@
 data {
   int<lower=1> nSubjects;
   int<lower=1> nTrials;
-  int<lower=1,upper=2> choice;
+  int<lower=1,upper=2> choice[nSubjects, nTrials]; // added [nSubjects, nTrials]
   real<lower=-1, upper=1> reward[nSubjects, nTrials]; 
 }
 
@@ -12,10 +12,10 @@ transformed data {
 
 parameters {
   // group-level parameters
-  real lr_mu_raw; 
+  real lr_mu_raw; // changed lr_mu_rae to lr_mu_raw
   real tau_mu_raw;
-  real lr_sd_raw;
-  real tau_sd_raw;
+  real<lower=0> lr_sd_raw; // added <lower=0>
+  real<lower=0> tau_sd_raw; // added <lower=0>
   
   // subject-level raw parameters
   vector[nSubjects] lr_raw;
@@ -26,8 +26,10 @@ transformed parameters {
   vector<lower=0,upper=1>[nSubjects] lr;
   vector<lower=0,upper=3>[nSubjects] tau;
   
-  lr  = Phi_approx( lr_mu_raw  + lr_sd_raw * lr_raw[s] )
-  tau = Phi_approx( tau_mu_raw + tau_sd_raw * tau_raw ) * 5;
+  for (s in 1:nSubjects) { // added for loop
+  lr[s]  = Phi_approx( lr_mu_raw  + lr_sd_raw * lr_raw[s] ); // added [s] and ;
+  tau[s] = Phi_approx( tau_mu_raw + tau_sd_raw * tau_raw[s] ) * 5; // added [s]
+  }
 }
 
 
@@ -46,9 +48,9 @@ model {
     v = initV;
 
     for (t in 1:nTrials) {        
-      Choice[s,t] ~ categorical( tau[s] * v );
+      choice[s,t] ~ categorical( tau[s] * v ); // changed Choice to choice
             
-      pe = Reward - v[choice[s,t]];      
+      pe = reward[s,t] - v[choice[s,t]]; // changed Reward to reward, added [s,t] after reward     
       v[choice[s,t]] = v[choice[s,t]] + lr[s] * pe; 
     }
   }    
@@ -71,7 +73,7 @@ generated quantities {
       v = initV;
 
       for (t in 1:nTrials) {    
-        log_lik[s] = log_lik[s] + categorical_logit_lpdf(choice[s,t] | tau[s] * v);    
+        log_lik[s] = log_lik[s] + categorical_logit_lpmf(choice[s,t] | tau[s] * v); //changed categorical_logit_lpdf to categorical_logit_lpmf    
               
         pe = reward[s,t] - v[choice[s,t]];      
         v[choice[s,t]] = v[choice[s,t]] + lr[s] * pe; 
