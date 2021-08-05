@@ -38,6 +38,9 @@ model {
   lr_mu_raw  ~ normal(0,1);
   tau_mu_raw ~ normal(0,1);
   
+  lr_sd_raw  ~ cauchy(0,3);
+  tau_sd_raw ~ cauchy(0,3); //added cauchy
+  
   // individual-level prior
   lr_raw  ~ normal(0,1);
   tau_raw ~ normal(0,1);
